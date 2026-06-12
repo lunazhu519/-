@@ -1,1 +1,461 @@
-<!-- 复制 yuqi_allergy.html 的内容作为 index.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>温昱琪 · 食物不耐受查询</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f7f7f5;color:#1a1a1a;min-height:100vh}
+.header{background:#fff;border-bottom:1px solid #e8e8e4;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.header-icon{width:36px;height:36px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:18px}
+.header h1{font-size:16px;font-weight:500;color:#1a1a1a}
+.header p{font-size:12px;color:#888;margin-top:1px}
+.main{max-width:800px;margin:0 auto;padding:20px 16px}
+.search-row{display:flex;gap:8px;margin-bottom:14px}
+.search-row input{flex:1;height:42px;padding:0 14px;border:1px solid #e0e0db;border-radius:10px;font-size:15px;background:#fff;color:#1a1a1a;outline:none}
+.search-row input:focus{border-color:#aaa;box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
+.search-row button{height:42px;width:42px;border:1px solid #e0e0db;border-radius:10px;background:#fff;color:#888;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.search-row button:hover{background:#f7f7f5}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:5px 13px;border:1px solid #e0e0db;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#666;transition:all 0.15s}
+.tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:20px}
+.food-card{padding:10px 12px;border-radius:10px;border:1px solid #e8e8e4;background:#fff;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s}
+.food-card:hover{border-color:#ccc;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.food-name{font-size:14px;font-weight:500;margin-bottom:3px;color:#1a1a1a}
+.food-meta{font-size:11px;color:#999;margin-bottom:5px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.neg{background:#EAF3DE;color:#3B6D11}
+.p1{background:#FAEEDA;color:#854F0B}
+.p2{background:#FAECE7;color:#993C1D}
+.p3{background:#FCEBEB;color:#A32D2D}
+
+.detail-panel{border:1px solid #e0e0db;border-radius:14px;padding:16px;margin-bottom:16px;background:#fff}
+.detail-panel h2{font-size:16px;font-weight:500;margin-bottom:6px;color:#1a1a1a}
+.detail-meta{font-size:12px;color:#999;margin-bottom:12px}
+.advice-box{padding:10px 12px;border-radius:8px;font-size:13px;line-height:1.65;margin-bottom:10px}
+.advice-neg{background:#EAF3DE;color:#3B6D11}
+.advice-p1{background:#FAEEDA;color:#854F0B}
+.advice-p2{background:#FAECE7;color:#993C1D}
+.advice-p3{background:#FCEBEB;color:#A32D2D}
+.nightshade-warn{margin-top:8px;padding:9px 11px;border-radius:8px;background:#FAEEDA;color:#854F0B;font-size:13px;line-height:1.6}
+.quick-log-btn{margin-top:10px;padding:6px 14px;border:1px solid #e0e0db;border-radius:8px;background:#f7f7f5;color:#555;font-size:13px;cursor:pointer}
+
+.unknown-panel{padding:14px 16px;border:1px dashed #d4d4cf;border-radius:14px;background:#fafaf8;margin-bottom:16px}
+.unknown-panel h3{font-size:14px;font-weight:500;margin-bottom:6px;color:#1a1a1a}
+.unknown-panel p{font-size:13px;color:#666;line-height:1.65}
+
+.section-title{font-size:12px;font-weight:500;color:#999;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:10px;padding-top:4px}
+
+.log-form-card{background:#fff;border:1px solid #e8e8e4;border-radius:14px;padding:16px;margin-bottom:16px}
+.log-form-card .form-row{display:flex;gap:8px;margin-bottom:8px}
+.log-form-card input,.log-form-card textarea,.log-form-card select{width:100%;padding:8px 12px;border:1px solid #e0e0db;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;outline:none;font-family:inherit}
+.log-form-card input:focus,.log-form-card textarea:focus,.log-form-card select:focus{border-color:#aaa}
+.log-form-card textarea{resize:vertical;min-height:60px;margin-bottom:8px}
+.log-form-card .form-bottom{display:flex;gap:8px;align-items:center}
+.log-form-card select{width:auto;flex:1}
+.submit-btn{padding:8px 18px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.log-entry{background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.log-entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.log-food-name{font-size:14px;font-weight:500;color:#1a1a1a}
+.log-date{font-size:12px;color:#bbb}
+.log-note{font-size:13px;color:#666;margin-top:5px;line-height:1.6}
+.log-author{font-size:11px;color:#bbb;margin-top:3px}
+.del-btn{padding:3px 8px;border:none;background:none;color:#ccc;cursor:pointer;font-size:13px;border-radius:6px}
+.del-btn:hover{color:#c0392b;background:#fff0ef}
+
+.loading{text-align:center;padding:20px;color:#999;font-size:14px}
+.empty-state{text-align:center;padding:24px;color:#bbb;font-size:14px}
+.error-banner{background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+
+/* 配置面板 */
+.config-panel{background:#fff;border:1px solid #e0e0db;border-radius:14px;padding:20px;margin-bottom:20px}
+.config-panel h2{font-size:15px;font-weight:500;margin-bottom:6px}
+.config-panel p{font-size:13px;color:#666;line-height:1.65;margin-bottom:12px}
+.config-panel input{width:100%;padding:9px 12px;border:1px solid #e0e0db;border-radius:8px;font-size:13px;font-family:monospace;margin-bottom:8px;outline:none}
+.config-panel input:focus{border-color:#aaa}
+.config-panel .btn-row{display:flex;gap:8px}
+.config-panel button{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #e0e0db;background:#f7f7f5;color:#555}
+.config-panel button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.config-steps{background:#f7f7f5;border-radius:8px;padding:12px 14px;font-size:13px;color:#555;line-height:2;margin-bottom:12px}
+.config-steps a{color:#2563eb;text-decoration:none}
+.config-steps a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🌿</div>
+  <div>
+    <h1>温昱琪 · 食物不耐受查询</h1>
+    <p>IgG 90项 · 2026-03-01 检测</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 配置面板（首次使用时显示） -->
+  <div class="config-panel" id="configPanel">
+    <h2>📦 第一步：连接云端记录存储</h2>
+    <p>记录将保存在 <strong>JSONBin.io</strong>（免费），家人共享同一份数据。按以下步骤操作：</p>
+    <div class="config-steps">
+      1. 打开 <a href="https://jsonbin.io" target="_blank">jsonbin.io</a>，注册免费账号<br>
+      2. 登录后点击右上角 <strong>API Keys</strong>，复制你的 <strong>Access Key</strong><br>
+      3. 点击左侧 <strong>Bins → Create Bin</strong>，内容填 <code>{"logs":[]}</code>，保存<br>
+      4. 复制 Bin 的 <strong>BIN ID</strong>（URL 里那串字符）<br>
+      5. 把两个值填入下方，点击保存
+    </div>
+    <input type="password" id="inputApiKey" placeholder="JSONBin Access Key（$2a$10$...）" />
+    <input type="text" id="inputBinId" placeholder="Bin ID（64位字符串）" />
+    <div class="btn-row">
+      <button class="primary" onclick="saveConfig()"><i class="ti ti-check"></i> 保存并连接</button>
+      <button onclick="skipConfig()">暂时跳过（仅本地）</button>
+    </div>
+  </div>
+
+  <div id="errorBanner" style="display:none" class="error-banner"></div>
+
+  <!-- 查询区 -->
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="搜索食物，如：鸡蛋、牛奶、苹果..." oninput="onSearch()" />
+    <button onclick="clearSearch()" aria-label="清空"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="tabs" id="tabBar"></div>
+  <div id="detailPanel" style="display:none"></div>
+  <div id="unknownPanel" style="display:none"></div>
+  <div id="resultGrid" class="results"></div>
+
+  <!-- 观察记录 -->
+  <p class="section-title">观察记录</p>
+  <div class="log-form-card">
+    <input type="text" id="logFood" placeholder="食物名称" style="margin-bottom:8px" />
+    <textarea id="logNote" placeholder="记录观察，如：进食约1小时后皮肤轻微泛红，2小时后消退..."></textarea>
+    <div class="form-bottom">
+      <select id="logReaction">
+        <option value="✅ 正常">✅ 正常</option>
+        <option value="⚠️ 轻微反应">⚠️ 轻微反应</option>
+        <option value="🔶 明显反应">🔶 明显反应</option>
+        <option value="🔴 严重反应">🔴 严重反应</option>
+      </select>
+      <input type="text" id="logAuthor" placeholder="记录人" style="flex:0.6;min-width:80px" />
+      <button class="submit-btn" id="submitBtn" onclick="addLog()">
+        <i class="ti ti-plus"></i> 添加
+      </button>
+    </div>
+  </div>
+
+  <div id="logLoading" class="loading" style="display:none"><i class="ti ti-loader-2"></i> 加载记录中...</div>
+  <div id="logList"></div>
+
+</div>
+
+<script>
+const ALL_FOODS = [
+  {cat:"肉蛋类",name:"鸡蛋",val:400,lvl:3,gt:true},
+  {cat:"肉蛋类",name:"牛肉",val:319.994,lvl:3},
+  {cat:"蔬菜类",name:"南瓜",val:400,lvl:3,gt:true},
+  {cat:"蔬菜类",name:"西红柿",val:400,lvl:3,gt:true},
+  {cat:"奶制品类",name:"牛奶",val:392.861,lvl:3},
+  {cat:"坚果类",name:"腰果",val:103.058,lvl:2},
+  {cat:"蔬菜类",name:"马铃薯",val:104.948,lvl:2},
+  {cat:"蔬菜类",name:"青豆",val:115.087,lvl:2},
+  {cat:"蔬菜类",name:"黄瓜",val:102.823,lvl:2},
+  {cat:"奶制品类",name:"白软干酪",val:92.504,lvl:1},
+  {cat:"粮食类",name:"小麦",val:90.799,lvl:1},
+  {cat:"水果类",name:"橘子",val:76.567,lvl:1},
+  {cat:"海鲜类",name:"草鱼",val:71.024,lvl:1},
+  {cat:"蔬菜类",name:"香菜",val:71.197,lvl:1},
+  {cat:"坚果类",name:"黑胡桃",val:66.463,lvl:1},
+  {cat:"蔬菜类",name:"甘薯",val:65.644,lvl:1},
+  {cat:"蔬菜类",name:"欧芹",val:61.984,lvl:1},
+  {cat:"坚果类",name:"葵花籽",val:54.308,lvl:1},
+  {cat:"蔬菜类",name:"胡萝卜",val:94.454,lvl:1},
+  {cat:"水果类",name:"哈密瓜",val:99.360,lvl:1},
+  {cat:"调料类",name:"肉桂",val:14.547,lvl:0},
+  {cat:"调料类",name:"黄油",val:23.348,lvl:0},
+  {cat:"调料类",name:"蜂蜜",val:14.051,lvl:0},
+  {cat:"调料类",name:"蔗糖",val:16.552,lvl:0},
+  {cat:"调料类",name:"芝麻",val:22.635,lvl:0},
+  {cat:"调料类",name:"大蒜",val:29.355,lvl:0},
+  {cat:"调料类",name:"芥末",val:48.040,lvl:0},
+  {cat:"调料类",name:"红辣椒",val:47.409,lvl:0},
+  {cat:"调料类",name:"大葱",val:23.493,lvl:0},
+  {cat:"海鲜类",name:"沙丁鱼",val:13.053,lvl:0},
+  {cat:"海鲜类",name:"金枪鱼",val:22.989,lvl:0},
+  {cat:"海鲜类",name:"带鱼",val:26.456,lvl:0},
+  {cat:"海鲜类",name:"蛤",val:23.276,lvl:0},
+  {cat:"海鲜类",name:"鳕鱼",val:31.847,lvl:0},
+  {cat:"海鲜类",name:"三文鱼",val:14.850,lvl:0},
+  {cat:"海鲜类",name:"扇贝",val:17.630,lvl:0},
+  {cat:"海鲜类",name:"鳟鱼",val:35.994,lvl:0},
+  {cat:"海鲜类",name:"牡蛎",val:15.419,lvl:0},
+  {cat:"海鲜类",name:"龙虾",val:13.427,lvl:0},
+  {cat:"海鲜类",name:"虾",val:14.597,lvl:0},
+  {cat:"海鲜类",name:"螃蟹",val:13.239,lvl:0},
+  {cat:"坚果类",name:"花生",val:15.262,lvl:0},
+  {cat:"坚果类",name:"杏仁",val:17.170,lvl:0},
+  {cat:"粮食类",name:"黑麦",val:13.954,lvl:0},
+  {cat:"粮食类",name:"麦芽",val:13.521,lvl:0},
+  {cat:"粮食类",name:"大豆",val:37.223,lvl:0},
+  {cat:"粮食类",name:"玉米",val:39.129,lvl:0},
+  {cat:"粮食类",name:"燕麦",val:45.069,lvl:0},
+  {cat:"粮食类",name:"小米",val:13.664,lvl:0},
+  {cat:"粮食类",name:"荞麦",val:19.631,lvl:0},
+  {cat:"粮食类",name:"大麦",val:12.961,lvl:0},
+  {cat:"粮食类",name:"大米",val:16.887,lvl:0},
+  {cat:"奶制品类",name:"切达干酪",val:32.589,lvl:0},
+  {cat:"奶制品类",name:"酸奶",val:23.420,lvl:0},
+  {cat:"奶制品类",name:"羊奶",val:16.222,lvl:0},
+  {cat:"其他类",name:"可乐豆",val:15.897,lvl:0},
+  {cat:"其他类",name:"酵母",val:13.332,lvl:0},
+  {cat:"其他类",name:"红茶",val:25.904,lvl:0},
+  {cat:"其他类",name:"咖啡",val:13.712,lvl:0},
+  {cat:"其他类",name:"巧克力",val:15.472,lvl:0},
+  {cat:"肉蛋类",name:"猪肉",val:14.901,lvl:0},
+  {cat:"肉蛋类",name:"火鸡",val:18.519,lvl:0},
+  {cat:"肉蛋类",name:"鸡肉",val:21.192,lvl:0},
+  {cat:"肉蛋类",name:"羊肉",val:13.905,lvl:0},
+  {cat:"蔬菜类",name:"菠菜",val:35.792,lvl:0},
+  {cat:"蔬菜类",name:"小白菜",val:47.409,lvl:0},
+  {cat:"蔬菜类",name:"洋葱",val:22.705,lvl:0},
+  {cat:"蔬菜类",name:"杂色豌豆",val:26.139,lvl:0},
+  {cat:"蔬菜类",name:"卷心菜",val:27.342,lvl:0},
+  {cat:"蔬菜类",name:"菜花",val:15.472,lvl:0},
+  {cat:"蔬菜类",name:"茄子",val:35.491,lvl:0},
+  {cat:"蔬菜类",name:"嫩豌豆",val:14.749,lvl:0},
+  {cat:"蔬菜类",name:"蘑菇",val:13.332,lvl:0},
+  {cat:"蔬菜类",name:"芹菜",val:19.131,lvl:0},
+  {cat:"蔬菜类",name:"生菜",val:20.270,lvl:0},
+  {cat:"蔬菜类",name:"青椒",val:44.230,lvl:0},
+  {cat:"蔬菜类",name:"西兰花",val:26.218,lvl:0},
+  {cat:"水果类",name:"苹果",val:16.552,lvl:0},
+  {cat:"水果类",name:"香蕉",val:17.514,lvl:0},
+  {cat:"水果类",name:"葡萄",val:19.505,lvl:0},
+  {cat:"水果类",name:"桃子",val:44.948,lvl:0},
+  {cat:"水果类",name:"草莓",val:17.630,lvl:0},
+  {cat:"水果类",name:"榴莲",val:29.441,lvl:0},
+  {cat:"水果类",name:"西瓜",val:36.707,lvl:0},
+  {cat:"水果类",name:"芒果",val:15.210,lvl:0},
+  {cat:"水果类",name:"蓝莓",val:19.757,lvl:0},
+  {cat:"水果类",name:"柠檬",val:14.901,lvl:0},
+  {cat:"水果类",name:"柚子",val:15.004,lvl:0},
+  {cat:"水果类",name:"橄榄",val:28.671,lvl:0},
+  {cat:"水果类",name:"菠萝",val:18.701,lvl:0}
+];
+
+const NIGHTSHADE = ["西红柿","马铃薯","茄子","青椒","红辣椒","番茄","土豆","辣椒"];
+const CATS = ["全部","肉蛋类","蔬菜类","水果类","粮食类","奶制品类","海鲜类","坚果类","调料类","其他类"];
+const LVL = [
+  {label:"阴性",badge:"neg",advice:"可正常食用，无需忌食。"},
+  {label:"轻度 +",badge:"p1",advice:"建议忌食3个月，或每隔7天吃一次。3个月后可恢复正常摄食。"},
+  {label:"中度 ++",badge:"p2",advice:"需严格忌食3个月，之后可每7天吃一次。6个月后复查，转阴后可正常摄食。"},
+  {label:"高度 +++",badge:"p3",advice:"需严格忌食6个月，之后3个月内每隔7天吃一次。复查转阴后再正常摄食。"}
+];
+
+let activeTab = "全部";
+let logs = [];
+let apiKey = localStorage.getItem("jb_api_key") || "";
+let binId = localStorage.getItem("jb_bin_id") || "";
+
+// ── 配置 ──────────────────────────────────
+function saveConfig() {
+  const k = document.getElementById("inputApiKey").value.trim();
+  const b = document.getElementById("inputBinId").value.trim();
+  if (!k || !b) { showError("请填写 API Key 和 Bin ID"); return; }
+  apiKey = k; binId = b;
+  localStorage.setItem("jb_api_key", k);
+  localStorage.setItem("jb_bin_id", b);
+  document.getElementById("configPanel").style.display = "none";
+  loadLogs();
+}
+function skipConfig() {
+  document.getElementById("configPanel").style.display = "none";
+  renderLogs();
+}
+
+// ── 初始化 ──────────────────────────────────
+window.onload = function() {
+  if (apiKey && binId) {
+    document.getElementById("configPanel").style.display = "none";
+    loadLogs();
+  }
+  buildTabs();
+  renderGrid("");
+};
+
+function buildTabs() {
+  const bar = document.getElementById("tabBar");
+  CATS.forEach(c => {
+    const t = document.createElement("div");
+    t.className = "tab" + (c === activeTab ? " active" : "");
+    t.textContent = c;
+    t.onclick = () => {
+      activeTab = c;
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      renderGrid(document.getElementById("searchInput").value.trim());
+    };
+    bar.appendChild(t);
+  });
+}
+
+// ── 查询 ──────────────────────────────────
+function onSearch() { renderGrid(document.getElementById("searchInput").value.trim()); }
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("detailPanel").style.display = "none";
+  document.getElementById("unknownPanel").style.display = "none";
+  renderGrid("");
+}
+
+function renderGrid(q) {
+  const grid = document.getElementById("resultGrid");
+  const unk = document.getElementById("unknownPanel");
+  grid.innerHTML = ""; unk.style.display = "none";
+  let foods = ALL_FOODS;
+  if (activeTab !== "全部") foods = foods.filter(f => f.cat === activeTab);
+  if (q) foods = foods.filter(f => f.name.includes(q) || f.cat.includes(q));
+  if (q && foods.length === 0) { showUnknown(q); return; }
+  if (q && foods.length === 1) showDetail(foods[0]);
+  [...foods].sort((a,b) => b.lvl - a.lvl || b.val - a.val).forEach(f => {
+    const info = LVL[f.lvl];
+    const d = document.createElement("div");
+    d.className = "food-card";
+    d.innerHTML = `<div class="food-name">${f.name}</div><div class="food-meta">${f.cat} · ${f.gt?">":""}${f.val.toFixed(1)} U/ml</div><span class="badge ${info.badge}">${info.label}</span>`;
+    d.onclick = () => showDetail(f);
+    grid.appendChild(d);
+  });
+}
+
+function showDetail(f) {
+  const p = document.getElementById("detailPanel");
+  const info = LVL[f.lvl];
+  const isNight = NIGHTSHADE.includes(f.name);
+  p.style.display = "block";
+  p.innerHTML = `
+    <div class="detail-panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2>${f.name} <span class="badge ${info.badge}">${info.label}</span></h2>
+          <p class="detail-meta">${f.cat} &nbsp;·&nbsp; IgG ${f.gt?">":""}${f.val.toFixed(1)} U/ml &nbsp;·&nbsp; 检测：2026-03-01</p>
+        </div>
+        <button onclick="document.getElementById('detailPanel').style.display='none'" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;padding:0">×</button>
+      </div>
+      <div class="advice-box advice-${info.badge}"><i class="ti ti-info-circle"></i>&nbsp;${info.advice}</div>
+      ${isNight ? `<div class="nightshade-warn"><i class="ti ti-alert-triangle"></i>&nbsp;属于茄科家族，建议在肠道修复期整个茄科（番茄、土豆、茄子、辣椒）一并回避。</div>` : ""}
+      <button class="quick-log-btn" onclick="prefillLog('${f.name}')"><i class="ti ti-pencil"></i> 记录「${f.name}」的观察</button>
+    </div>`;
+}
+
+function showUnknown(q) {
+  const unk = document.getElementById("unknownPanel");
+  unk.style.display = "block";
+  const isNight = NIGHTSHADE.includes(q);
+  unk.innerHTML = `
+    <div class="unknown-panel">
+      <h3>「${q}」不在90项检测范围内</h3>
+      <p>该食物未经IgG检测，无法判断不耐受级别。建议少量尝试并观察24–48小时内的皮肤、消化道反应，记录在下方。如反应明显，可纳入下次复查清单。</p>
+      ${isNight ? `<p style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#FAEEDA;color:#854F0B;font-size:13px;"><i class="ti ti-alert-triangle"></i>&nbsp;「${q}」属于茄科家族，在肠道修复期建议与番茄、土豆、茄子、辣椒等一起回避。</p>` : ""}
+      <button class="quick-log-btn" style="margin-top:10px" onclick="prefillLog('${q}')"><i class="ti ti-pencil"></i> 记录「${q}」的观察</button>
+    </div>`;
+}
+
+function prefillLog(name) {
+  document.getElementById("logFood").value = name;
+  document.getElementById("logFood").scrollIntoView({behavior:"smooth", block:"center"});
+  setTimeout(() => document.getElementById("logFood").focus(), 400);
+}
+
+// ── 记录（JSONBin） ──────────────────────────────────
+async function loadLogs() {
+  if (!apiKey || !binId) { renderLogs(); return; }
+  document.getElementById("logLoading").style.display = "block";
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: {"X-Master-Key": apiKey}
+    });
+    if (!r.ok) throw new Error("读取失败 " + r.status);
+    const data = await r.json();
+    logs = data.record.logs || [];
+  } catch(e) {
+    showError("云端记录加载失败：" + e.message + "。请检查 API Key 和 Bin ID。");
+  }
+  document.getElementById("logLoading").style.display = "none";
+  renderLogs();
+}
+
+async function saveLogs() {
+  if (!apiKey || !binId) return;
+  await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    method: "PUT",
+    headers: {"Content-Type":"application/json","X-Master-Key": apiKey},
+    body: JSON.stringify({logs})
+  });
+}
+
+async function addLog() {
+  const food = document.getElementById("logFood").value.trim();
+  const note = document.getElementById("logNote").value.trim();
+  const reaction = document.getElementById("logReaction").value;
+  const author = document.getElementById("logAuthor").value.trim() || "家人";
+  if (!food) { document.getElementById("logFood").focus(); return; }
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> 保存中...';
+  const entry = {
+    id: Date.now(), food, note, reaction, author,
+    date: new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"})
+  };
+  logs.unshift(entry);
+  try {
+    await saveLogs();
+  } catch(e) {
+    showError("保存失败，记录已存本地：" + e.message);
+    try { localStorage.setItem("yuqi_logs_backup", JSON.stringify(logs)); } catch(e2){}
+  }
+  document.getElementById("logFood").value = "";
+  document.getElementById("logNote").value = "";
+  document.getElementById("logReaction").value = "✅ 正常";
+  btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> 添加';
+  renderLogs();
+}
+
+async function deleteLog(id) {
+  if (!confirm("确认删除这条记录？")) return;
+  logs = logs.filter(l => l.id !== id);
+  await saveLogs();
+  renderLogs();
+}
+
+function renderLogs() {
+  const list = document.getElementById("logList");
+  if (logs.length === 0) {
+    list.innerHTML = `<div class="empty-state"><i class="ti ti-notes" style="font-size:24px;display:block;margin-bottom:8px;color:#ddd"></i>还没有观察记录</div>`;
+    return;
+  }
+  const rCls = {"✅ 正常":"neg","⚠️ 轻微反应":"p1","🔶 明显反应":"p2","🔴 严重反应":"p3"};
+  list.innerHTML = logs.map(l => `
+    <div class="log-entry">
+      <div class="log-entry-top">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="log-food-name">${l.food}</span>
+          <span class="badge ${rCls[l.reaction]||"neg"}" style="font-size:11px">${l.reaction}</span>
+        </div>
+        <button class="del-btn" onclick="deleteLog(${l.id})" title="删除"><i class="ti ti-trash"></i></button>
+      </div>
+      ${l.note ? `<p class="log-note">${l.note}</p>` : ""}
+      <p class="log-author">${l.date} &nbsp;·&nbsp; ${l.author||"家人"}</p>
+    </div>`).join("");
+}
+
+function showError(msg) {
+  const b = document.getElementById("errorBanner");
+  b.style.display = "block"; b.textContent = msg;
+  setTimeout(() => b.style.display = "none", 6000);
+}
+</script>
+</body>
+</html>
