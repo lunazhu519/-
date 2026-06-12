@@ -16,7 +16,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .search-row{display:flex;gap:8px;margin-bottom:14px}
 .search-row input{flex:1;height:42px;padding:0 14px;border:1px solid #e0e0db;border-radius:10px;font-size:15px;background:#fff;color:#1a1a1a;outline:none}
 .search-row input:focus{border-color:#aaa;box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
-.search-row button{height:42px;width:42px;border:1px solid #e0e0db;border-radius:10px;background:#fff;color:#888;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.search-row button{height:42px;width:42px;border:1px solid #e0e0db;border-radius:10px;background:#fff;color:#888;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
 .search-row button:hover{background:#f7f7f5}
 .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .tab{padding:5px 13px;border:1px solid #e0e0db;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#666;transition:all 0.15s}
@@ -70,7 +70,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 .loading{text-align:center;padding:20px;color:#999;font-size:14px}
 .empty-state{text-align:center;padding:24px;color:#bbb;font-size:14px}
-.error-banner{background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.error-banner{background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.error-banner button{background:none;border:none;color:#A32D2D;cursor:pointer;font-size:16px;padding:0;margin-left:auto}
 
 /* 配置面板 */
 .config-panel{background:#fff;border:1px solid #e0e0db;border-radius:14px;padding:20px;margin-bottom:20px}
@@ -78,12 +79,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .config-panel p{font-size:13px;color:#666;line-height:1.65;margin-bottom:12px}
 .config-panel input{width:100%;padding:9px 12px;border:1px solid #e0e0db;border-radius:8px;font-size:13px;font-family:monospace;margin-bottom:8px;outline:none}
 .config-panel input:focus{border-color:#aaa}
-.config-panel .btn-row{display:flex;gap:8px}
+.config-panel .btn-row{display:flex;gap:8px;flex-wrap:wrap}
 .config-panel button{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #e0e0db;background:#f7f7f5;color:#555}
 .config-panel button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.config-panel button:disabled{opacity:0.5;cursor:not-allowed}
 .config-steps{background:#f7f7f5;border-radius:8px;padding:12px 14px;font-size:13px;color:#555;line-height:2;margin-bottom:12px}
 .config-steps a{color:#2563eb;text-decoration:none}
 .config-steps a:hover{text-decoration:underline}
+
+.config-status{padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;border:1px solid #e8e8e4;display:none}
+.config-status.success{background:#EAF3DE;color:#3B6D11;border-color:#D4E4C4}
+.config-status.error{background:#FCEBEB;color:#A32D2D;border-color:#F5D5D5}
 </style>
 </head>
 <body>
@@ -98,8 +104,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 <div class="main">
 
-  <!-- 配置面板（首次使用时显示） -->
-  <div class="config-panel" id="configPanel">
+  <!-- 配置面板（首次使用或需要重新配置时显示） -->
+  <div class="config-panel" id="configPanel" style="display:none">
     <h2>📦 第一步：连接云端记录存储</h2>
     <p>记录将保存在 <strong>JSONBin.io</strong>（免费），家人共享同一份数据。按以下步骤操作：</p>
     <div class="config-steps">
@@ -109,15 +115,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
       4. 复制 Bin 的 <strong>BIN ID</strong>（URL 里那串字符）<br>
       5. 把两个值填入下方，点击保存
     </div>
+    <div id="configStatus" class="config-status"></div>
     <input type="password" id="inputApiKey" placeholder="JSONBin Access Key（$2a$10$...）" />
     <input type="text" id="inputBinId" placeholder="Bin ID（64位字符串）" />
     <div class="btn-row">
-      <button class="primary" onclick="saveConfig()"><i class="ti ti-check"></i> 保存并连接</button>
+      <button class="primary" id="saveConfigBtn" onclick="saveConfig()"><i class="ti ti-check"></i> 保存并连接</button>
       <button onclick="skipConfig()">暂时跳过（仅本地）</button>
+      <button onclick="resetConfig()" style="margin-left:auto"><i class="ti ti-refresh"></i> 重新配置</button>
     </div>
   </div>
 
-  <div id="errorBanner" style="display:none" class="error-banner"></div>
+  <div id="errorBanner" style="display:none" class="error-banner">
+    <span id="errorText"></span>
+    <button onclick="this.parentElement.style.display='none'">×</button>
+  </div>
 
   <!-- 查询区 -->
   <div class="search-row">
@@ -260,31 +271,106 @@ let activeTab = "全部";
 let logs = [];
 let apiKey = localStorage.getItem("jb_api_key") || "";
 let binId = localStorage.getItem("jb_bin_id") || "";
+let cloudConfigured = !!apiKey && !!binId;
 
 // ── 配置 ──────────────────────────────────
 function saveConfig() {
   const k = document.getElementById("inputApiKey").value.trim();
   const b = document.getElementById("inputBinId").value.trim();
-  if (!k || !b) { showError("请填写 API Key 和 Bin ID"); return; }
-  apiKey = k; binId = b;
-  localStorage.setItem("jb_api_key", k);
-  localStorage.setItem("jb_bin_id", b);
-  document.getElementById("configPanel").style.display = "none";
-  loadLogs();
+  
+  if (!k || !b) { 
+    showConfigStatus("请填写 API Key 和 Bin ID", "error");
+    return; 
+  }
+  
+  const btn = document.getElementById("saveConfigBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> 验证中...';
+  
+  // 测试连接
+  fetch(`https://api.jsonbin.io/v3/b/${b}/latest`, {
+    headers: {"X-Master-Key": k}
+  })
+  .then(r => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> 保存并连接';
+    
+    if (!r.ok) {
+      if (r.status === 401 || r.status === 403) {
+        showConfigStatus("❌ API Key 错误或无权限，请检查后重试", "error");
+      } else if (r.status === 404) {
+        showConfigStatus("❌ Bin ID 不存在，请检查后重试", "error");
+      } else {
+        showConfigStatus("❌ 连接失败（HTTP " + r.status + "），请检查网络", "error");
+      }
+      return;
+    }
+    
+    apiKey = k;
+    binId = b;
+    cloudConfigured = true;
+    localStorage.setItem("jb_api_key", k);
+    localStorage.setItem("jb_bin_id", b);
+    
+    showConfigStatus("✅ 连接成功！数据同步中...", "success");
+    setTimeout(() => {
+      document.getElementById("configPanel").style.display = "none";
+      loadLogs();
+    }, 800);
+  })
+  .catch(e => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> 保存并连接';
+    showConfigStatus("❌ 网络错误：" + e.message, "error");
+  });
 }
+
 function skipConfig() {
   document.getElementById("configPanel").style.display = "none";
+  sessionStorage.setItem("config_skipped", "true");
+  cloudConfigured = false;
   renderLogs();
+}
+
+function resetConfig() {
+  localStorage.removeItem("jb_api_key");
+  localStorage.removeItem("jb_bin_id");
+  apiKey = "";
+  binId = "";
+  cloudConfigured = false;
+  
+  document.getElementById("inputApiKey").value = "";
+  document.getElementById("inputBinId").value = "";
+  document.getElementById("configStatus").style.display = "none";
+  
+  showError("已清除配置，请重新输入");
+}
+
+function showConfigStatus(msg, type) {
+  const status = document.getElementById("configStatus");
+  status.textContent = msg;
+  status.className = "config-status " + type;
+  status.style.display = "block";
 }
 
 // ── 初始化 ──────────────────────────────────
 window.onload = function() {
-  if (apiKey && binId) {
-    document.getElementById("configPanel").style.display = "none";
-    loadLogs();
+  // 决定是否显示配置面板
+  const hasConfig = apiKey && binId;
+  const showConfig = !hasConfig && !sessionStorage.getItem("config_skipped");
+  
+  if (showConfig) {
+    document.getElementById("configPanel").style.display = "block";
   }
+  
   buildTabs();
   renderGrid("");
+  
+  if (hasConfig) {
+    loadLogs();
+  } else {
+    renderLogs();
+  }
 };
 
 function buildTabs() {
@@ -358,8 +444,8 @@ function showUnknown(q) {
   unk.innerHTML = `
     <div class="unknown-panel">
       <h3>「${q}」不在90项检测范围内</h3>
-      <p>该食物未经IgG检测，无法判断不耐受级别。建议少量尝试并观察24–48小时内的皮肤、消化道反应，记录在下方。如反应明显，可纳入下次复查清单。</p>
-      ${isNight ? `<p style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#FAEEDA;color:#854F0B;font-size:13px;"><i class="ti ti-alert-triangle"></i>&nbsp;「${q}」属于茄科家族，在肠道修复期建议与番茄、土豆、茄子、辣椒等一起回避。</p>` : ""}
+      <p>该食物未经IgG检测，无法判断不耐受级别。建议少量尝试并观察24–48小时内的皮肤、消化道反应，记录在下方。如反应明显，可纳入下次复查。</p>
+      ${isNight ? `<p style="margin-top:8px;padding:8px 10px;border-radius:8px;background:#FAEEDA;color:#854F0B;font-size:13px;"><i class="ti ti-alert-triangle"></i>&nbsp;「${q}」属于茄科食材，建议检查相关成分，谨慎尝试。</p>` : ""}
       <button class="quick-log-btn" style="margin-top:10px" onclick="prefillLog('${q}')"><i class="ti ti-pencil"></i> 记录「${q}」的观察</button>
     </div>`;
 }
@@ -378,11 +464,12 @@ async function loadLogs() {
     const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
       headers: {"X-Master-Key": apiKey}
     });
-    if (!r.ok) throw new Error("读取失败 " + r.status);
+    if (!r.ok) throw new Error("读取失败 HTTP " + r.status);
     const data = await r.json();
     logs = data.record.logs || [];
   } catch(e) {
-    showError("云端记录加载失败：" + e.message + "。请检查 API Key 和 Bin ID。");
+    showError("云端记录加载失败：" + e.message + "。已切换到本地模式，可点击「重新配置」重试。");
+    cloudConfigured = false;
   }
   document.getElementById("logLoading").style.display = "none";
   renderLogs();
@@ -390,11 +477,18 @@ async function loadLogs() {
 
 async function saveLogs() {
   if (!apiKey || !binId) return;
-  await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-    method: "PUT",
-    headers: {"Content-Type":"application/json","X-Master-Key": apiKey},
-    body: JSON.stringify({logs})
-  });
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+      method: "PUT",
+      headers: {"Content-Type":"application/json","X-Master-Key": apiKey},
+      body: JSON.stringify({logs})
+    });
+    if (!r.ok) throw new Error("保存失败 HTTP " + r.status);
+    return true;
+  } catch(e) {
+    console.error("SaveLogs error:", e);
+    return false;
+  }
 }
 
 async function addLog() {
@@ -403,30 +497,57 @@ async function addLog() {
   const reaction = document.getElementById("logReaction").value;
   const author = document.getElementById("logAuthor").value.trim() || "家人";
   if (!food) { document.getElementById("logFood").focus(); return; }
+  
   const btn = document.getElementById("submitBtn");
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> 保存中...';
+  btn.disabled = true; 
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> 保存中...';
+  
   const entry = {
     id: Date.now(), food, note, reaction, author,
     date: new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"})
   };
   logs.unshift(entry);
-  try {
-    await saveLogs();
-  } catch(e) {
-    showError("保存失败，记录已存本地：" + e.message);
-    try { localStorage.setItem("yuqi_logs_backup", JSON.stringify(logs)); } catch(e2){}
+  
+  let saveSuccess = false;
+  if (cloudConfigured) {
+    saveSuccess = await saveLogs();
+  } else {
+    // 本地模式：存到 localStorage 备份
+    saveSuccess = true;
   }
+  
+  try { 
+    localStorage.setItem("yuqi_logs_backup", JSON.stringify(logs)); 
+  } catch(e){}
+  
+  if (!saveSuccess && cloudConfigured) {
+    showError("云端保存失败，记录已保存到本地浏览器，可稍后重新配置后同步。");
+    cloudConfigured = false;
+  }
+  
   document.getElementById("logFood").value = "";
   document.getElementById("logNote").value = "";
   document.getElementById("logReaction").value = "✅ 正常";
-  btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> 添加';
+  btn.disabled = false; 
+  btn.innerHTML = '<i class="ti ti-plus"></i> 添加';
   renderLogs();
 }
 
 async function deleteLog(id) {
   if (!confirm("确认删除这条记录？")) return;
   logs = logs.filter(l => l.id !== id);
-  await saveLogs();
+  
+  if (cloudConfigured) {
+    const success = await saveLogs();
+    if (!success) {
+      showError("云端删除失败，记录已在本地删除");
+    }
+  }
+  
+  try { 
+    localStorage.setItem("yuqi_logs_backup", JSON.stringify(logs)); 
+  } catch(e){}
+  
   renderLogs();
 }
 
@@ -453,8 +574,10 @@ function renderLogs() {
 
 function showError(msg) {
   const b = document.getElementById("errorBanner");
-  b.style.display = "block"; b.textContent = msg;
-  setTimeout(() => b.style.display = "none", 6000);
+  const t = document.getElementById("errorText");
+  t.textContent = msg;
+  b.style.display = "flex";
+  setTimeout(() => b.style.display = "none", 8000);
 }
 </script>
 </body>
