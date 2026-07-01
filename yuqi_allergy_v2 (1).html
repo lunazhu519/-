@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>温昱琪 · 过敏筛查工具</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:#f5f5f2;color:#1a1a1a;min-height:100vh;font-size:15px}
+a{color:inherit;text-decoration:none}
+
+/* ── Header ── */
+.header{background:#fff;border-bottom:1px solid #e8e8e4;padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20}
+.header-icon{width:38px;height:38px;border-radius:50%;background:#edf4e8;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.header-title{font-size:15px;font-weight:600;color:#1a1a1a}
+.header-sub{font-size:12px;color:#999;margin-top:1px}
+.header-right{margin-left:auto;display:flex;gap:8px}
+.icon-btn{width:34px;height:34px;border:1px solid #e8e8e4;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#666}
+.icon-btn:hover{background:#f5f5f2}
+
+/* ── Main layout ── */
+.main{max-width:820px;margin:0 auto;padding:18px 16px}
+
+/* ── Search ── */
+.search-wrap{position:relative;margin-bottom:14px}
+.search-wrap .ti-search{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:16px;color:#bbb}
+.search-wrap input{width:100%;height:44px;padding:0 40px 0 38px;border:1px solid #e0e0db;border-radius:12px;font-size:15px;background:#fff;color:#1a1a1a;outline:none;transition:border-color .15s,box-shadow .15s}
+.search-wrap input:focus{border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
+.search-clear{position:absolute;right:11px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;background:none;cursor:pointer;font-size:16px;color:#bbb;display:none;align-items:center;justify-content:center}
+.search-clear.show{display:flex}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:5px 13px;border:1px solid #e0e0db;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#666;transition:all .15s;white-space:nowrap}
+.tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+
+/* ── Summary bar ── */
+.summary-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sum-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;font-size:12px;font-weight:500}
+.sum-chip .dot{width:7px;height:7px;border-radius:50%}
+.sum-p3{background:#FCEBEB;color:#A32D2D}.sum-p3 .dot{background:#A32D2D}
+.sum-p2{background:#FAECE7;color:#993C1D}.sum-p2 .dot{background:#E06030}
+.sum-p1{background:#FAEEDA;color:#854F0B}.sum-p1 .dot{background:#C07020}
+.sum-neg{background:#EAF3DE;color:#3B6D11}.sum-neg .dot{background:#5A9E22}
+.sum-ige{background:#EEF2FF;color:#3730A3}.sum-ige .dot{background:#6366F1}
+
+/* ── Grid ── */
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:18px}
+.food-card{padding:10px 12px;border-radius:10px;border:1px solid #e8e8e4;background:#fff;cursor:pointer;transition:all .15s;position:relative}
+.food-card:hover{border-color:#bbb;box-shadow:0 2px 10px rgba(0,0,0,0.07);transform:translateY(-1px)}
+.food-card.has-ige::after{content:"";position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:#6366F1}
+.food-name{font-size:14px;font-weight:500;margin-bottom:3px;color:#1a1a1a}
+.food-meta{font-size:11px;color:#aaa;margin-bottom:5px}
+.badge-row{display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:500;white-space:nowrap}
+.neg{background:#EAF3DE;color:#3B6D11}
+.p1{background:#FAEEDA;color:#854F0B}
+.p2{background:#FAECE7;color:#993C1D}
+.p3{background:#FCEBEB;color:#A32D2D}
+.ige-badge{background:#EEF2FF;color:#3730A3;font-weight:600}
+.ige-neg{background:#F3F4F6;color:#9CA3AF}
+
+/* ── Detail panel ── */
+.detail-panel{background:#fff;border:1px solid #e0e0db;border-radius:14px;padding:18px;margin-bottom:16px;animation:slideIn .15s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.detail-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.detail-name{font-size:18px;font-weight:600;margin-bottom:4px}
+.detail-meta{font-size:12px;color:#aaa}
+.close-btn{width:28px;height:28px;border:none;background:#f5f5f2;border-radius:6px;cursor:pointer;font-size:14px;color:#888;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.close-btn:hover{background:#e8e8e4}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.report-box{padding:10px 12px;border-radius:10px;border:1px solid #eee}
+.report-box-label{font-size:11px;color:#aaa;margin-bottom:4px;font-weight:500;letter-spacing:.03em}
+.report-box-val{font-size:13px;font-weight:500;color:#1a1a1a;margin-bottom:5px}
+.advice-section{margin-bottom:10px}
+.advice-box{padding:10px 12px;border-radius:9px;font-size:13px;line-height:1.7;margin-bottom:8px}
+.advice-neg{background:#EAF3DE;color:#3B6D11}
+.advice-p1{background:#FAEEDA;color:#854F0B}
+.advice-p2{background:#FAECE7;color:#993C1D}
+.advice-p3{background:#FCEBEB;color:#A32D2D}
+.advice-ige{background:#EEF2FF;color:#3730A3}
+.advice-warn{background:#FFF7ED;color:#92400E;border-left:3px solid #F59E0B;padding-left:11px}
+.advice-tip{background:#F0FDF4;color:#166534;border-left:3px solid #4ADE80;padding-left:11px}
+.note-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.note-list li{font-size:13px;line-height:1.65;color:#555;padding-left:18px;position:relative}
+.note-list li::before{content:"·";position:absolute;left:6px;color:#999}
+.quick-log-btn{margin-top:10px;padding:7px 14px;border:1px solid #e0e0db;border-radius:8px;background:#f5f5f2;color:#555;font-size:13px;cursor:pointer;transition:background .15s}
+.quick-log-btn:hover{background:#e8e8e4}
+
+/* ── Unknown panel ── */
+.unknown-panel{background:#fafaf8;border:1px dashed #d4d4cf;border-radius:14px;padding:16px;margin-bottom:16px;animation:slideIn .15s ease}
+.unknown-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.unknown-body{font-size:13px;color:#666;line-height:1.7}
+
+/* ── Section label ── */
+.section-label{font-size:11px;font-weight:600;color:#aaa;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;margin-top:6px}
+
+/* ── Log form ── */
+.log-card{background:#fff;border:1px solid #e8e8e4;border-radius:14px;padding:16px;margin-bottom:14px}
+.log-card input,.log-card textarea,.log-card select{width:100%;padding:8px 11px;border:1px solid #e0e0db;border-radius:8px;font-size:14px;background:#fff;color:#1a1a1a;outline:none;font-family:inherit;transition:border-color .15s}
+.log-card input:focus,.log-card textarea:focus,.log-card select:focus{border-color:#999}
+.log-card textarea{resize:vertical;min-height:58px;margin:8px 0}
+.log-bottom{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.log-bottom select{flex:1;min-width:120px}
+.log-bottom .author-input{flex:0 0 90px}
+.submit-btn{padding:8px 18px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:opacity .15s}
+.submit-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── Log entries ── */
+.log-entry{background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.log-entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.log-food-name{font-size:14px;font-weight:600}
+.log-note{font-size:13px;color:#666;margin-top:5px;line-height:1.65}
+.log-footer{font-size:11px;color:#ccc;margin-top:5px}
+.del-btn{border:none;background:none;color:#ddd;cursor:pointer;font-size:14px;padding:2px 5px;border-radius:5px}
+.del-btn:hover{color:#c0392b;background:#fff0ef}
+.empty-state{text-align:center;padding:28px;color:#ccc;font-size:14px}
+.loading-state{text-align:center;padding:18px;color:#999;font-size:13px}
+.error-banner{background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;display:none}
+
+/* ── Config modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:24px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal p{font-size:13px;color:#666;line-height:1.7;margin-bottom:12px}
+.modal input{width:100%;padding:9px 12px;border:1px solid #e0e0db;border-radius:8px;font-size:13px;font-family:monospace;margin-bottom:8px;outline:none;color:#1a1a1a}
+.modal input:focus{border-color:#999}
+.modal-steps{background:#f5f5f2;border-radius:9px;padding:12px 14px;font-size:13px;color:#555;line-height:2;margin-bottom:14px}
+.modal-steps a{color:#2563eb}
+.modal-btn-row{display:flex;gap:8px}
+.modal-btn{padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #e0e0db;background:#f5f5f2;color:#555;transition:background .15s}
+.modal-btn.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.modal-btn:hover{opacity:.85}
+
+/* ── IgE legend panel ── */
+.ige-legend{background:#EEF2FF;border:1px solid #C7D2FE;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#3730A3;line-height:1.8}
+.ige-legend strong{font-weight:600}
+
+/* Mobile */
+@media(max-width:480px){
+  .report-grid{grid-template-columns:1fr}
+  .results{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🌿</div>
+  <div>
+    <div class="header-title">温昱琪 · 过敏筛查</div>
+    <div class="header-sub">IgG 90项（2026-03-01）· IgE 21项（2026-01-05）</div>
+  </div>
+  <div class="header-right">
+    <div class="icon-btn" onclick="openConfig()" title="设置云端存储"><i class="ti ti-settings"></i></div>
+  </div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-bg" id="modalBg" style="display:none">
+  <div class="modal">
+    <h2>☁️ 连接云端记录</h2>
+    <p>记录保存在 <strong>JSONBin.io</strong>（免费），家人共享同一份数据，无需登录。</p>
+    <div class="modal-steps">
+      1. 打开 <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> 注册免费账号<br>
+      2. 右上角 <strong>API Keys</strong> → 复制 <strong>Access Key</strong><br>
+      3. 左侧 <strong>Bins → Create Bin</strong>，内容填 <code>{"logs":[]}</code>，保存<br>
+      4. 复制 Bin 的 <strong>BIN ID</strong>（URL中那串字符）<br>
+      5. 填入下方，点保存
+    </div>
+    <input type="password" id="inputApiKey" placeholder="JSONBin Access Key（$2a$10$...）" />
+    <input type="text" id="inputBinId" placeholder="Bin ID" />
+    <div class="modal-btn-row">
+      <button class="modal-btn primary" onclick="saveConfig()"><i class="ti ti-check"></i> 保存并连接</button>
+      <button class="modal-btn" onclick="closeConfig()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- IgE总览提示 -->
+  <div class="ige-legend">
+    <strong>🔬 IgE报告（2026-01-05）：</strong>
+    总IgE <strong>226.65</strong>（3–6岁参考值 &lt;35，显著偏高）&nbsp;·&nbsp;
+    粉尘螨 <strong>4级（很高）</strong>&nbsp;·&nbsp;
+    屋尘螨 <strong>3级（高）</strong>&nbsp;·&nbsp;
+    鸡蛋 <strong>2级</strong>&nbsp;·&nbsp;
+    牛奶 <strong>2级</strong>&nbsp;·&nbsp;
+    小麦 <strong>2级</strong>&nbsp;·&nbsp;
+    屋尘 <strong>1级</strong>
+    &nbsp;·&nbsp;<span style="opacity:.7">紫色圆点表示该食物有IgE阳性数据</span>
+  </div>
+
+  <!-- 搜索 -->
+  <div class="search-wrap">
+    <i class="ti ti-search"></i>
+    <input type="text" id="searchInput" placeholder="搜索食物，如：鸡蛋、牛奶、山药、桃子…" oninput="onSearch()" />
+    <button class="search-clear" id="clearBtn" onclick="clearSearch()"><i class="ti ti-x"></i></button>
+  </div>
+
+  <!-- 分类标签 -->
+  <div class="tabs" id="tabBar"></div>
+
+  <!-- 汇总条 -->
+  <div class="summary-bar" id="summaryBar"></div>
+
+  <!-- 详情面板 -->
+  <div id="detailPanel" style="display:none"></div>
+  <!-- 表外食物面板 -->
+  <div id="unknownPanel" style="display:none"></div>
+
+  <!-- 食物卡片 -->
+  <div id="resultGrid" class="results"></div>
+
+  <!-- 观察记录 -->
+  <p class="section-label" style="margin-top:8px">观察记录</p>
+  <div class="log-card">
+    <input type="text" id="logFood" placeholder="食物名称（可填表外食物）" />
+    <textarea id="logNote" placeholder="记录观察，如：进食约1小时后皮肤轻微泛红，2小时后消退…"></textarea>
+    <div class="log-bottom">
+      <select id="logReaction">
+        <option value="✅ 正常">✅ 正常</option>
+        <option value="⚠️ 轻微反应">⚠️ 轻微反应</option>
+        <option value="🔶 明显反应">🔶 明显反应</option>
+        <option value="🔴 严重反应">🔴 严重反应</option>
+      </select>
+      <input type="text" id="logAuthor" class="author-input" placeholder="记录人" />
+      <button class="submit-btn" id="submitBtn" onclick="addLog()">
+        <i class="ti ti-plus"></i> 添加
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" id="logLoading" style="display:none"><i class="ti ti-loader-2"></i> 加载记录中…</div>
+  <div id="logList"></div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  数据层
+// ══════════════════════════════════════════════════════════
+
+// IgG数据：{cat, name, iggVal, iggLvl, gt}
+// iggLvl: 0=阴性 1=+ 2=++ 3=+++
+const IGG = [
+  // 肉蛋类
+  {cat:"肉蛋类",name:"鸡蛋",iggVal:400,iggLvl:3,gt:true},
+  {cat:"肉蛋类",name:"牛肉",iggVal:319.994,iggLvl:3},
+  {cat:"肉蛋类",name:"猪肉",iggVal:14.901,iggLvl:0},
+  {cat:"肉蛋类",name:"火鸡",iggVal:18.519,iggLvl:0},
+  {cat:"肉蛋类",name:"鸡肉",iggVal:21.192,iggLvl:0},
+  {cat:"肉蛋类",name:"羊肉",iggVal:13.905,iggLvl:0},
+  // 蔬菜类
+  {cat:"蔬菜类",name:"南瓜",iggVal:400,iggLvl:3,gt:true},
+  {cat:"蔬菜类",name:"西红柿",iggVal:400,iggLvl:3,gt:true},
+  {cat:"蔬菜类",name:"马铃薯",iggVal:104.948,iggLvl:2},
+  {cat:"蔬菜类",name:"青豆",iggVal:115.087,iggLvl:2},
+  {cat:"蔬菜类",name:"黄瓜",iggVal:102.823,iggLvl:2},
+  {cat:"蔬菜类",name:"甘薯",iggVal:65.644,iggLvl:1},
+  {cat:"蔬菜类",name:"香菜",iggVal:71.197,iggLvl:1},
+  {cat:"蔬菜类",name:"欧芹",iggVal:61.984,iggLvl:1},
+  {cat:"蔬菜类",name:"胡萝卜",iggVal:94.454,iggLvl:1},
+  {cat:"蔬菜类",name:"菠菜",iggVal:35.792,iggLvl:0},
+  {cat:"蔬菜类",name:"小白菜",iggVal:47.409,iggLvl:0},
+  {cat:"蔬菜类",name:"洋葱",iggVal:22.705,iggLvl:0},
+  {cat:"蔬菜类",name:"杂色豌豆",iggVal:26.139,iggLvl:0},
+  {cat:"蔬菜类",name:"卷心菜",iggVal:27.342,iggLvl:0},
+  {cat:"蔬菜类",name:"菜花",iggVal:15.472,iggLvl:0},
+  {cat:"蔬菜类",name:"茄子",iggVal:35.491,iggLvl:0},
+  {cat:"蔬菜类",name:"嫩豌豆",iggVal:14.749,iggLvl:0},
+  {cat:"蔬菜类",name:"蘑菇",iggVal:13.332,iggLvl:0},
+  {cat:"蔬菜类",name:"芹菜",iggVal:19.131,iggLvl:0},
+  {cat:"蔬菜类",name:"生菜",iggVal:20.270,iggLvl:0},
+  {cat:"蔬菜类",name:"青椒",iggVal:44.230,iggLvl:0},
+  {cat:"蔬菜类",name:"西兰花",iggVal:26.218,iggLvl:0},
+  // 水果类
+  {cat:"水果类",name:"橘子",iggVal:76.567,iggLvl:1},
+  {cat:"水果类",name:"哈密瓜",iggVal:99.360,iggLvl:1},
+  {cat:"水果类",name:"苹果",iggVal:16.552,iggLvl:0},
+  {cat:"水果类",name:"香蕉",iggVal:17.514,iggLvl:0},
+  {cat:"水果类",name:"葡萄",iggVal:19.505,iggLvl:0},
+  {cat:"水果类",name:"桃子",iggVal:44.948,iggLvl:0},
+  {cat:"水果类",name:"草莓",iggVal:17.630,iggLvl:0},
+  {cat:"水果类",name:"榴莲",iggVal:29.441,iggLvl:0},
+  {cat:"水果类",name:"西瓜",iggVal:36.707,iggLvl:0},
+  {cat:"水果类",name:"芒果",iggVal:15.210,iggLvl:0},
+  {cat:"水果类",name:"蓝莓",iggVal:19.757,iggLvl:0},
+  {cat:"水果类",name:"柠檬",iggVal:14.901,iggLvl:0},
+  {cat:"水果类",name:"柚子",iggVal:15.004,iggLvl:0},
+  {cat:"水果类",name:"橄榄",iggVal:28.671,iggLvl:0},
+  {cat:"水果类",name:"菠萝",iggVal:18.701,iggLvl:0},
+  // 粮食类
+  {cat:"粮食类",name:"小麦",iggVal:90.799,iggLvl:1},
+  {cat:"粮食类",name:"黑麦",iggVal:13.954,iggLvl:0},
+  {cat:"粮食类",name:"麦芽",iggVal:13.521,iggLvl:0},
+  {cat:"粮食类",name:"大豆",iggVal:37.223,iggLvl:0},
+  {cat:"粮食类",name:"玉米",iggVal:39.129,iggLvl:0},
+  {cat:"粮食类",name:"燕麦",iggVal:45.069,iggLvl:0},
+  {cat:"粮食类",name:"小米",iggVal:13.664,iggLvl:0},
+  {cat:"粮食类",name:"荞麦",iggVal:19.631,iggLvl:0},
+  {cat:"粮食类",name:"大麦",iggVal:12.961,iggLvl:0},
+  {cat:"粮食类",name:"大米",iggVal:16.887,iggLvl:0},
+  // 奶制品类
+  {cat:"奶制品类",name:"牛奶",iggVal:392.861,iggLvl:3},
+  {cat:"奶制品类",name:"白软干酪",iggVal:92.504,iggLvl:1},
+  {cat:"奶制品类",name:"切达干酪",iggVal:32.589,iggLvl:0},
+  {cat:"奶制品类",name:"酸奶",iggVal:23.420,iggLvl:0},
+  {cat:"奶制品类",name:"羊奶",iggVal:16.222,iggLvl:0},
+  // 海鲜类
+  {cat:"海鲜类",name:"草鱼",iggVal:71.024,iggLvl:1},
+  {cat:"海鲜类",name:"沙丁鱼",iggVal:13.053,iggLvl:0},
+  {cat:"海鲜类",name:"金枪鱼",iggVal:22.989,iggLvl:0},
+  {cat:"海鲜类",name:"带鱼",iggVal:26.456,iggLvl:0},
+  {cat:"海鲜类",name:"蛤",iggVal:23.276,iggLvl:0},
+  {cat:"海鲜类",name:"鳕鱼",iggVal:31.847,iggLvl:0},
+  {cat:"海鲜类",name:"三文鱼",iggVal:14.850,iggLvl:0},
+  {cat:"海鲜类",name:"扇贝",iggVal:17.630,iggLvl:0},
+  {cat:"海鲜类",name:"鳟鱼",iggVal:35.994,iggLvl:0},
+  {cat:"海鲜类",name:"牡蛎",iggVal:15.419,iggLvl:0},
+  {cat:"海鲜类",name:"龙虾",iggVal:13.427,iggLvl:0},
+  {cat:"海鲜类",name:"虾",iggVal:14.597,iggLvl:0},
+  {cat:"海鲜类",name:"螃蟹",iggVal:13.239,iggLvl:0},
+  // 坚果类
+  {cat:"坚果类",name:"腰果",iggVal:103.058,iggLvl:2},
+  {cat:"坚果类",name:"黑胡桃",iggVal:66.463,iggLvl:1},
+  {cat:"坚果类",name:"葵花籽",iggVal:54.308,iggLvl:1},
+  {cat:"坚果类",name:"花生",iggVal:15.262,iggLvl:0},
+  {cat:"坚果类",name:"杏仁",iggVal:17.170,iggLvl:0},
+  // 调料类
+  {cat:"调料类",name:"红辣椒",iggVal:47.409,iggLvl:0},
+  {cat:"调料类",name:"芥末",iggVal:48.040,iggLvl:0},
+  {cat:"调料类",name:"大蒜",iggVal:29.355,iggLvl:0},
+  {cat:"调料类",name:"大葱",iggVal:23.493,iggLvl:0},
+  {cat:"调料类",name:"芝麻",iggVal:22.635,iggLvl:0},
+  {cat:"调料类",name:"黄油",iggVal:23.348,iggLvl:0},
+  {cat:"调料类",name:"蔗糖",iggVal:16.552,iggLvl:0},
+  {cat:"调料类",name:"蜂蜜",iggVal:14.051,iggLvl:0},
+  {cat:"调料类",name:"肉桂",iggVal:14.547,iggLvl:0},
+  // 其他
+  {cat:"其他类",name:"巧克力",iggVal:15.472,iggLvl:0},
+  {cat:"其他类",name:"红茶",iggVal:25.904,iggLvl:0},
+  {cat:"其他类",name:"可乐豆",iggVal:15.897,iggLvl:0},
+  {cat:"其他类",name:"酵母",iggVal:13.332,iggLvl:0},
+  {cat:"其他类",name:"咖啡",iggVal:13.712,iggLvl:0},
+];
+
+// IgE阳性数据（仅食物相关，环境过敏原另处说明）
+// igeLvl: 0=阴性 1=低 2=中 3=高 4=很高 5=非常高 6=极高
+// IgE报告中食物名称统一映射（报告原名→IgG表中食物名）
+// 检测项目：鸡蛋(TD)、牛奶(NN)、小麦面粉(XMMF)、花生(HS)、大豆(DD)、螃蟹(PX)、虾(X)、牛肉(NR)、鳕鱼(XY)、羊肉(YR)
+const IGE_MAP = {
+  "鸡蛋":  {val:3.02, lvl:2, label:"2级"},
+  "牛奶":  {val:0.71, lvl:2, label:"2级"},
+  "小麦":  {val:1.17, lvl:2, label:"2级"},   // 报告原名"小麦面粉"，统一为IGG表名"小麦"
+  "花生":  {val:0.03, lvl:0, label:"阴性"},
+  "大豆":  {val:0.12, lvl:0, label:"阴性"},
+  "螃蟹":  {val:0.06, lvl:0, label:"阴性"},
+  "虾":    {val:0.04, lvl:0, label:"阴性"},
+  "牛肉":  {val:0.08, lvl:0, label:"阴性"},
+  "鳕鱼":  {val:0.08, lvl:0, label:"阴性"},
+  "羊肉":  {val:0.05, lvl:0, label:"阴性"},
+};
+
+// 特殊注意事项库
+const NOTES = {
+  "鸡蛋": {
+    cross: ["鸡肉（蛋肉综合征风险，建议一并观察）","含蛋加工品（蛋糕、饼干、面包、蛋挞、沙拉酱）"],
+    tips: ["完全去除需检查所有加工食品配料表，【卵磷脂】【蛋白质粉】中可能含蛋","替代蛋白：豆腐、瘦肉、鱼肉","IgG+++ 且 IgE 2级，双重阳性，严格忌食"]
+  },
+  "牛肉": {
+    cross: ["牛脾肽补充剂（请注意来源，已与厂家确认为氨基酸级别）","牛骨汤、牛肉干、汉堡酱料"],
+    tips: ["IgG+++，IgE阴性，以慢性不耐受为主","替代蛋白：猪肉、鸡肉、鱼肉、羊肉均安全"]
+  },
+  "牛奶": {
+    cross: ["白软干酪（IgG+）","切达干酪（虽IgG阴性但同源，建议少量观察）","酸奶、冰激凌、奶片、含奶零食","乳清蛋白粉"],
+    tips: ["IgG+++ 且 IgE 2级，双重阳性，严格忌食","羊奶IgG阴性但与牛奶蛋白存在交叉，初次尝试需少量观察","液体钙已确认不含牛奶成分✓"]
+  },
+  "南瓜": {
+    cross: ["南瓜属瓜类：西葫芦、冬瓜、丝瓜、苦瓜建议观察后谨慎食用","南瓜子"],
+    tips: ["IgG+++，严格忌食","瓜类蔬菜不完全交叉，可逐一少量测试"]
+  },
+  "西红柿": {
+    cross: ["番茄酱、番茄汁、番茄为底料的意面酱、披萨酱","茄科家族：马铃薯（IgG++）、茄子（虽IgG阴性）、青椒、红辣椒"],
+    tips: ["IgG+++，茄科全家族建议肠道修复期整体回避","加热不能显著降低西红柿的IgG抗原性"]
+  },
+  "马铃薯": {
+    cross: ["土豆淀粉、薯片、薯条、各类土豆加工食品","茄科家族：西红柿（IgG+++）、茄子、青椒"],
+    tips: ["IgG++，茄科交叉风险明确","替代主食：大米、小米、荞麦均安全"]
+  },
+  "青豆": {
+    cross: ["毛豆、豌豆（杂色豌豆IgG阴性但同科）","豆类加工品需逐一观察"],
+    tips: ["IgG++，豆科植物存在交叉抗原性","大豆IgG阴性，但初次食用建议少量观察"]
+  },
+  "黄瓜": {
+    cross: ["同属葫芦科：西葫芦、苦瓜，建议少量观察"],
+    tips: ["IgG++，注意加工食品中的黄瓜成分（泡菜等）","生黄瓜抗原性高于熟黄瓜"]
+  },
+  "小麦": {
+    cross: ["面粉制品：面包、馒头、饺子皮、面条、饼干、蛋糕","大麦（IgG阴性但含麸质）、黑麦","谷氨酰胺粉中麦芽提取物（已确认0.2mg/条，极微量）"],
+    tips: ["IgG+ 且 IgE 2级，双重阳性，IgG为轻度但IgE为中度，建议忌食","替代粮食：大米✓ 小米✓ 荞麦✓ 玉米✓"]
+  },
+  "腰果": {
+    cross: ["腰果与芒果同属漆树科，有交叉风险（芒果IgG阴性，但接触皮肤有刺激）","混合坚果零食请检查成分"],
+    tips: ["IgG++，严格忌食","花生、杏仁IgG均阴性，可正常食用"]
+  },
+  "橘子": {
+    cross: ["柑橘科全家族：橙子、柚子（IgG阴性）、柠檬（IgG阴性）交叉风险较低","橘子果汁、橘子味饮料"],
+    tips: ["IgG+，轮替或每7天一次","柚子和柠檬IgG均阴性，少量食用可观察"]
+  },
+  "哈密瓜": {
+    cross: ["瓜类：西瓜（IgG阴性）、甜瓜建议少量观察","口腔过敏综合征：部分花粉过敏者对哈密瓜有交叉反应"],
+    tips: ["IgG+，与尘螨过敏存在理论交叉（花粉-食物综合征）","西瓜IgG阴性，可正常食用"]
+  },
+  "草鱼": {
+    cross: ["淡水鱼类之间存在交叉抗原：鲤鱼、鲫鱼、鲢鱼建议少量观察","深海鱼（三文鱼、鳕鱼、带鱼）IgG均阴性，相对安全"],
+    tips: ["IgG+，建议忌食或每7天一次","鱼类过敏多由小白蛋白引起，深海鱼与淡水鱼交叉程度不同"]
+  },
+  "白软干酪": {
+    cross: ["同为牛奶制品，牛奶IgG+++，建议一并严格忌食"],
+    tips: ["IgG+，与牛奶同源，肠道修复期不推荐食用","羊奶来源的奶酪理论上交叉风险较低"]
+  },
+  "胡萝卜": {
+    cross: ["伞形科：芹菜（IgG阴性）、欧芹（IgG+）、香菜（IgG+）交叉风险","部分尘螨过敏者对胡萝卜有花粉-食物综合征反应"],
+    tips: ["IgG+，建议忌食或每7天一次","煮熟的胡萝卜抗原性低于生胡萝卜"]
+  },
+  "香菜": {
+    cross: ["伞形科：欧芹（IgG+）、芹菜（IgG阴性）","两者均有IgG阳性，伞形科整体少量谨慎食用"],
+    tips: ["IgG+，建议忌食或每7天一次","通常作为调料少量使用，注意累积摄入量"]
+  },
+  "欧芹": {
+    cross: ["伞形科：香菜（IgG+）、芹菜（IgG阴性）"],
+    tips: ["IgG+，多作调味料使用，注意食用频率"]
+  },
+  "甘薯": {
+    cross: ["红薯即甘薯，不属于茄科，交叉风险低","山药（未测）同为薯类但不同科，可少量尝试"],
+    tips: ["IgG+，建议忌食或每7天一次","番薯叶可正常食用（不同部位抗原性不同）"]
+  },
+  "黑胡桃": {
+    cross: ["坚果类存在广泛交叉，核桃与黑胡桃同科","腰果（IgG++）已需忌食，其他坚果一并少量观察"],
+    tips: ["IgG+，建议忌食或每7天一次"]
+  },
+  "葵花籽": {
+    cross: ["芝麻（IgG阴性）交叉风险低","含葵花籽的饼干、零食注意配料表"],
+    tips: ["IgG+，建议忌食或每7天一次"]
+  },
+  "桃子": {
+    cross: ["蔷薇科：樱桃、李子、杏建议少量观察","与尘螨过敏存在脂质转移蛋白（LTP）交叉风险"],
+    tips: ["IgG阴性，可食用","⚠️ 桃皮刺激性强，建议削皮后食用；接触桃毛可能引起皮肤刺激","尘螨4级阳性者对桃子LTP蛋白可能有交叉反应，首次食用少量观察"]
+  },
+  "芒果": {
+    cross: ["漆树科：腰果（IgG++）同科，存在理论交叉","芒果果皮含漆酚（urushiol），接触可引起接触性皮炎"],
+    tips: ["IgG阴性，可食用","⚠️ 建议切片后用叉子食用，避免果皮接触嘴唇和皮肤","果肉本身系统过敏风险低，皮肤接触反应是局部刺激而非全身过敏"]
+  },
+  "菠萝": {
+    cross: [],
+    tips: ["IgG阴性，可食用","⚠️ 菠萝蛋白酶对口腔黏膜有刺激，建议盐水浸泡10分钟后食用","少量开始，观察口腔和皮肤反应"]
+  },
+  "西瓜": {
+    cross: ["葫芦科：哈密瓜（IgG+）同科，建议少量观察"],
+    tips: ["IgG阴性，可正常食用","西瓜含水量高，胃肠敏感儿童一次不宜过多"]
+  },
+  "草莓": {
+    cross: ["蔷薇科：与桃子同科，LTP蛋白可能交叉"],
+    tips: ["IgG阴性，可食用","⚠️ 草莓表面凹凸处易残留农药，建议流水冲洗1分钟以上，去蒂后再吃","尘螨阳性者初次食用少量观察"]
+  },
+  "山药": {
+    cross: [],
+    tips: ["未在检测范围内","⚠️ 山药黏液（薯蓣皂苷）接触皮肤可引起接触性皮炎和瘙痒，处理时建议戴手套","去皮后煮熟食用刺激性大幅降低，一般可正常食用","首次食用少量观察消化道反应"]
+  },
+  "大豆": {
+    cross: ["青豆（IgG++）同属豆科","豆浆、豆腐、豆奶等大豆制品","益生菌产品中可能含大豆来源成分，请留意配料表"],
+    tips: ["IgG阴性，IgE阴性，可食用","与青豆（毛豆）存在交叉抗原，但大豆本身检测安全"]
+  },
+  "鸡肉": {
+    cross: ["与鸡蛋（IgG+++）存在蛋肉综合征交叉风险","建议在鸡蛋忌食期间，鸡肉也少量谨慎观察"],
+    tips: ["IgG阴性，但因蛋肉综合征风险，首次食用需少量观察","鸭肉、猪肉、鱼肉为更安全的替代蛋白"]
+  },
+  "茄子": {
+    cross: ["茄科家族：西红柿（IgG+++）、马铃薯（IgG++）、青椒、红辣椒"],
+    tips: ["IgG阴性，但属茄科","⚠️ 因茄科家族整体反应模式明确，肠道修复期建议整体回避茄科"]
+  },
+  "青椒": {
+    cross: ["茄科家族：西红柿（IgG+++）、马铃薯（IgG++）、茄子"],
+    tips: ["IgG阴性，但属茄科","⚠️ 肠道修复期建议随家族整体回避"]
+  },
+  "红辣椒": {
+    cross: ["茄科家族成员"],
+    tips: ["IgG阴性，但属茄科","⚠️ 辣椒素对敏感消化道有刺激，儿童建议少量"]
+  },
+};
+
+// 环境过敏原（仅展示，不在食物卡片里）
+const ENV_IGE = [
+  {name:"粉尘螨",val:30.16,lvl:4,label:"4级（很高）"},
+  {name:"屋尘螨",val:4.64,lvl:3,label:"3级（高）"},
+  {name:"屋尘",val:0.55,lvl:1,label:"1级（低）"},
+];
+
+const LVL_INFO = [
+  {label:"阴性",badge:"neg",advice:"可正常食用，无需忌食。"},
+  {label:"轻度 +",badge:"p1",advice:"建议忌食3个月，或每隔7天轮替一次。3个月后可恢复正常摄食。"},
+  {label:"中度 ++",badge:"p2",advice:"需严格忌食3个月，之后可每7天吃一次。6个月后复查，转阴后可正常摄食。"},
+  {label:"高度 +++",badge:"p3",advice:"需严格忌食6个月，之后3个月内每隔7天吃一次。复查转阴后再正常摄食。"},
+];
+const IGE_LVL_LABEL = ["阴性","1级（低）","2级（中）","3级（高）","4级（很高）","5级（非常高）","6级（极高）"];
+const IGE_LVL_BADGE = ["ige-neg","ige-neg","ige-badge","ige-badge","ige-badge","ige-badge","ige-badge"];
+
+const CATS = ["全部","肉蛋类","蔬菜类","水果类","粮食类","奶制品类","海鲜类","坚果类","调料类","其他类"];
+const NIGHTSHADE = new Set(["西红柿","马铃薯","茄子","青椒","红辣椒","番茄","土豆","辣椒"]);
+
+let activeTab = "全部";
+let logs = [];
+let apiKey = localStorage.getItem("jb_api_key") || "";
+let binId  = localStorage.getItem("jb_bin_id")  || "";
+
+// ══════════════════════════════════════════════════════════
+//  初始化
+// ══════════════════════════════════════════════════════════
+window.onload = () => {
+  buildTabs();
+  renderGrid("");
+  updateSummary(IGG);
+  if (apiKey && binId) loadLogs();
+  else renderLogs();
+};
+
+function buildTabs() {
+  const bar = document.getElementById("tabBar");
+  CATS.forEach(c => {
+    const t = document.createElement("div");
+    t.className = "tab" + (c === activeTab ? " active" : "");
+    t.textContent = c;
+    t.onclick = () => {
+      activeTab = c;
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      t.classList.add("active");
+      renderGrid(document.getElementById("searchInput").value.trim());
+    };
+    bar.appendChild(t);
+  });
+}
+
+function updateSummary(foods) {
+  const bar = document.getElementById("summaryBar");
+  const counts = [0,0,0,0];
+  foods.forEach(f => counts[f.iggLvl]++);
+  bar.innerHTML = `
+    <div class="sum-chip sum-p3"><div class="dot"></div>高度+++ ${counts[3]}项</div>
+    <div class="sum-chip sum-p2"><div class="dot"></div>中度++ ${counts[2]}项</div>
+    <div class="sum-chip sum-p1"><div class="dot"></div>轻度+ ${counts[1]}项</div>
+    <div class="sum-chip sum-neg"><div class="dot"></div>阴性 ${counts[0]}项</div>
+    <div class="sum-chip sum-ige"><div class="dot"></div>IgE阳性 3项食物</div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════
+//  搜索 & 渲染
+// ══════════════════════════════════════════════════════════
+function onSearch() {
+  const q = document.getElementById("searchInput").value.trim();
+  document.getElementById("clearBtn").classList.toggle("show", q.length > 0);
+  renderGrid(q);
+}
+
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("clearBtn").classList.remove("show");
+  document.getElementById("detailPanel").style.display = "none";
+  document.getElementById("unknownPanel").style.display = "none";
+  renderGrid("");
+}
+
+function renderGrid(q) {
+  const grid = document.getElementById("resultGrid");
+  const unk  = document.getElementById("unknownPanel");
+  grid.innerHTML = ""; unk.style.display = "none";
+
+  let foods = IGG;
+  if (activeTab !== "全部") foods = foods.filter(f => f.cat === activeTab);
+  if (q) foods = foods.filter(f => f.name.includes(q) || f.cat.includes(q));
+
+  updateSummary(foods);
+
+  if (q && foods.length === 0) { showUnknown(q); return; }
+  if (q && foods.length === 1) showDetail(foods[0]);
+
+  [...foods]
+    .sort((a,b) => b.iggLvl - a.iggLvl || b.iggVal - a.iggVal)
+    .forEach(f => {
+      const info = LVL_INFO[f.iggLvl];
+      const ige  = IGE_MAP[f.name];
+      const hasIgePos = ige && ige.lvl > 0;
+      const d = document.createElement("div");
+      d.className = "food-card" + (hasIgePos ? " has-ige" : "");
+      const igeBadgeHTML = ige
+        ? `<div class="badge-row" style="margin-top:4px"><span class="badge ${IGE_LVL_BADGE[ige.lvl]}">${hasIgePos ? "⚡ IgE "+ige.label : "IgE 阴性"}</span></div>`
+        : "";
+      d.innerHTML = `
+        <div class="food-name">${f.name}</div>
+        <div class="food-meta">${f.cat}</div>
+        <div class="badge-row">
+          <span class="badge ${info.badge}">IgG ${info.label}</span>
+        </div>
+        ${igeBadgeHTML}`;
+      d.onclick = () => showDetail(f);
+      grid.appendChild(d);
+    });
+}
+
+// ══════════════════════════════════════════════════════════
+//  详情面板
+// ══════════════════════════════════════════════════════════
+function showDetail(f) {
+  const panel = document.getElementById("detailPanel");
+  const info  = LVL_INFO[f.iggLvl];
+  const ige   = IGE_MAP[f.name];
+  const note  = NOTES[f.name];
+  const isNight = NIGHTSHADE.has(f.name);
+
+  // IgG 框
+  const iggBox = `
+    <div class="report-box">
+      <div class="report-box-label">IgG 食物不耐受（2026-03-01）</div>
+      <div class="report-box-val">${f.gt ? ">" : ""}${f.iggVal.toFixed(1)} U/ml &nbsp;<span class="badge ${info.badge}">${info.label}</span></div>
+      <div class="advice-box advice-${info.badge}" style="margin:0;font-size:12px;padding:7px 10px">${info.advice}</div>
+    </div>`;
+
+  // IgE 框
+  let igeBox = "";
+  if (ige) {
+    igeBox = `
+      <div class="report-box">
+        <div class="report-box-label">IgE 特异性过敏原（2026-01-05）</div>
+        <div class="report-box-val">${ige.val} kU/L &nbsp;<span class="badge ${IGE_LVL_BADGE[ige.lvl]}">${ige.label}</span></div>
+        <div class="advice-box advice-${ige.lvl > 0 ? "ige" : ""} ${ige.lvl === 0 ? "advice-neg" : ""}" style="margin:0;font-size:12px;padding:7px 10px">
+          ${ige.lvl >= 2 ? "⚠️ IgE阳性：存在速发型过敏风险，严格忌食，避免接触。" : ige.lvl === 1 ? "IgE低度阳性：有轻微速发风险，少量谨慎观察。" : "IgE阴性：无速发型过敏证据。"}
+        </div>
+      </div>`;
+  } else {
+    igeBox = `
+      <div class="report-box">
+        <div class="report-box-label">IgE 特异性过敏原（2026-01-05）</div>
+        <div class="report-box-val" style="color:#aaa;font-size:13px">未纳入检测项目</div>
+      </div>`;
+  }
+
+  // 交叉 & 注意事项
+  let crossHTML = "";
+  if (isNight) {
+    crossHTML += `<div class="advice-box advice-warn" style="margin-bottom:8px"><strong>🍅 茄科家族警示：</strong>西红柿（IgG+++）、马铃薯（IgG++）、茄子、青椒、红辣椒同属茄科，肠道修复期建议整个家族一并回避。</div>`;
+  }
+  if (note) {
+    if (note.cross && note.cross.length) {
+      crossHTML += `<div style="margin-bottom:8px"><div style="font-size:12px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:.04em">同科 / 交叉风险食物</div><ul class="note-list">${note.cross.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
+    }
+    if (note.tips && note.tips.length) {
+      crossHTML += `<div><div style="font-size:12px;font-weight:600;color:#999;margin-bottom:5px;letter-spacing:.04em">注意事项 & 建议</div><ul class="note-list">${note.tips.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
+    }
+  }
+
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <div class="detail-panel">
+      <div class="detail-top">
+        <div>
+          <div class="detail-name">${f.name}</div>
+          <div class="detail-meta">${f.cat}</div>
+        </div>
+        <button class="close-btn" onclick="document.getElementById('detailPanel').style.display='none'"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="report-grid">${iggBox}${igeBox}</div>
+      ${crossHTML ? `<div style="margin-bottom:10px">${crossHTML}</div>` : ""}
+      <button class="quick-log-btn" onclick="prefillLog('${f.name}')"><i class="ti ti-pencil"></i> 记录「${f.name}」的观察</button>
+    </div>`;
+
+  panel.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+// ══════════════════════════════════════════════════════════
+//  表外食物
+// ══════════════════════════════════════════════════════════
+function showUnknown(q) {
+  const unk = document.getElementById("unknownPanel");
+  unk.style.display = "block";
+
+  const isNight = NIGHTSHADE.has(q);
+  // 特殊提示食物
+  const special = NOTES[q];
+  let specialHTML = "";
+  if (special && special.tips && special.tips.length) {
+    specialHTML = `<ul class="note-list" style="margin-top:8px">${special.tips.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  }
+
+  unk.innerHTML = `
+    <div class="unknown-panel">
+      <div class="unknown-title">「${q}」未在90项IgG检测中</div>
+      <div class="unknown-body">
+        该食物无IgG不耐受数据。建议首次少量尝试，观察24–48小时内皮肤、消化道反应，记录于下方。
+        ${isNight ? `<div class="advice-box advice-warn" style="margin-top:8px"><strong>⚠️ 茄科成员：</strong>「${q}」属茄科，肠道修复期建议随家族整体回避。</div>` : ""}
+        ${specialHTML}
+      </div>
+      <button class="quick-log-btn" style="margin-top:10px" onclick="prefillLog('${q}')"><i class="ti ti-pencil"></i> 记录「${q}」的观察</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  记录
+// ══════════════════════════════════════════════════════════
+function prefillLog(name) {
+  document.getElementById("logFood").value = name;
+  document.getElementById("logFood").scrollIntoView({behavior:"smooth", block:"center"});
+  setTimeout(() => document.getElementById("logFood").focus(), 350);
+}
+
+async function loadLogs() {
+  document.getElementById("logLoading").style.display = "block";
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: {"X-Master-Key": apiKey}
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    logs = data.record.logs || [];
+  } catch(e) {
+    showError("云端记录加载失败：" + e.message);
+  }
+  document.getElementById("logLoading").style.display = "none";
+  renderLogs();
+}
+
+async function saveLogs() {
+  if (!apiKey || !binId) return;
+  const r = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    method:"PUT",
+    headers:{"Content-Type":"application/json","X-Master-Key": apiKey},
+    body: JSON.stringify({logs})
+  });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+}
+
+async function addLog() {
+  const food     = document.getElementById("logFood").value.trim();
+  const note     = document.getElementById("logNote").value.trim();
+  const reaction = document.getElementById("logReaction").value;
+  const author   = document.getElementById("logAuthor").value.trim() || "家人";
+  if (!food) { document.getElementById("logFood").focus(); return; }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> 保存中…';
+
+  const entry = {
+    id: Date.now(), food, note, reaction, author,
+    date: new Date().toLocaleDateString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"})
+  };
+  logs.unshift(entry);
+
+  try {
+    await saveLogs();
+  } catch(e) {
+    showError("云端保存失败，已备份到本地：" + e.message);
+    try { localStorage.setItem("yuqi_logs_backup", JSON.stringify(logs)); } catch(e2){}
+  }
+
+  document.getElementById("logFood").value = "";
+  document.getElementById("logNote").value = "";
+  document.getElementById("logReaction").value = "✅ 正常";
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-plus"></i> 添加';
+  renderLogs();
+}
+
+async function deleteLog(id) {
+  if (!confirm("确认删除这条记录？")) return;
+  logs = logs.filter(l => l.id !== id);
+  try { await saveLogs(); } catch(e) { showError("删除同步失败：" + e.message); }
+  renderLogs();
+}
+
+function renderLogs() {
+  const list = document.getElementById("logList");
+  if (!logs.length) {
+    list.innerHTML = `<div class="empty-state"><i class="ti ti-notes" style="font-size:28px;display:block;margin-bottom:8px"></i>还没有观察记录</div>`;
+    return;
+  }
+  const rCls = {"✅ 正常":"neg","⚠️ 轻微反应":"p1","🔶 明显反应":"p2","🔴 严重反应":"p3"};
+  list.innerHTML = logs.map(l => `
+    <div class="log-entry">
+      <div class="log-entry-top">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="log-food-name">${l.food}</span>
+          <span class="badge ${rCls[l.reaction]||"neg"}" style="font-size:11px">${l.reaction}</span>
+        </div>
+        <button class="del-btn" onclick="deleteLog(${l.id})" title="删除"><i class="ti ti-trash"></i></button>
+      </div>
+      ${l.note ? `<p class="log-note">${l.note}</p>` : ""}
+      <p class="log-footer">${l.date} &nbsp;·&nbsp; ${l.author||"家人"}</p>
+    </div>`).join("");
+}
+
+// ══════════════════════════════════════════════════════════
+//  Config
+// ══════════════════════════════════════════════════════════
+function openConfig() {
+  document.getElementById("inputApiKey").value = apiKey;
+  document.getElementById("inputBinId").value  = binId;
+  document.getElementById("modalBg").style.display = "flex";
+}
+function closeConfig() { document.getElementById("modalBg").style.display = "none"; }
+function saveConfig() {
+  const k = document.getElementById("inputApiKey").value.trim();
+  const b = document.getElementById("inputBinId").value.trim();
+  if (!k || !b) { showError("请填写完整的 API Key 和 Bin ID"); return; }
+  apiKey = k; binId = b;
+  localStorage.setItem("jb_api_key", k);
+  localStorage.setItem("jb_bin_id",  b);
+  closeConfig();
+  loadLogs();
+}
+document.getElementById("modalBg").addEventListener("click", e => {
+  if (e.target === document.getElementById("modalBg")) closeConfig();
+});
+
+function showError(msg) {
+  const b = document.getElementById("errorBanner");
+  b.textContent = msg; b.style.display = "block";
+  setTimeout(() => b.style.display = "none", 7000);
+}
+</script>
+</body>
+</html>
